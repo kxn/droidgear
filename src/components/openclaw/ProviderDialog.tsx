@@ -32,6 +32,7 @@ import {
 } from '@/lib/bindings'
 import { ChannelModelPickerDialog } from '@/components/channels/ChannelModelPickerDialog'
 import type { ChannelProviderContext } from '@/components/channels'
+import { findModelByIdOrAlias } from '@/lib/model-registry'
 
 interface ProviderDialogProps {
   open: boolean
@@ -145,13 +146,14 @@ function ProviderForm({
   const handleAddSelectedModels = () => {
     const newModels: OpenClawModel[] = Array.from(selectedModelIds).map(id => {
       const info = availableModels.find(m => m.id === id)
+      const registry = findModelByIdOrAlias(id)
       return {
         id,
-        name: info?.name ?? null,
+        name: registry?.name ?? info?.name ?? null,
         reasoning: true,
         input: ['text', 'image'],
-        contextWindow: 200000,
-        maxTokens: 8192,
+        contextWindow: registry?.contextWindow ?? 200000,
+        maxTokens: registry?.maxOutputTokens ?? 8192,
       }
     })
     // Merge with existing models, avoiding duplicates
@@ -186,14 +188,17 @@ function ProviderForm({
     setBaseUrl(importedBaseUrl)
 
     // Import models
-    const newModels: OpenClawModel[] = importedModels.map(m => ({
-      id: m.model,
-      name: m.displayName ?? null,
-      reasoning: true,
-      input: ['text', 'image'],
-      contextWindow: 200000,
-      maxTokens: m.maxOutputTokens ?? 8192,
-    }))
+    const newModels: OpenClawModel[] = importedModels.map(m => {
+      const registry = findModelByIdOrAlias(m.model)
+      return {
+        id: m.model,
+        name: registry?.name ?? m.displayName ?? null,
+        reasoning: true,
+        input: ['text', 'image'],
+        contextWindow: registry?.contextWindow ?? 200000,
+        maxTokens: registry?.maxOutputTokens ?? m.maxOutputTokens ?? 8192,
+      }
+    })
     // Merge with existing models, avoiding duplicates
     const existingIds = new Set(models.map(m => m.id))
     const uniqueNewModels = newModels.filter(m => !existingIds.has(m.id))
@@ -213,12 +218,23 @@ function ProviderForm({
     const model = updated[index]
     if (!model) return
 
-    // When modifying id, auto-sync name if name is empty or equals current id
+    // When modifying id, auto-fill from registry
     if (field === 'id' && typeof value === 'string') {
+      const registry = findModelByIdOrAlias(value)
       const currentName = model.name
       const currentId = model.id
-      // Sync if name is empty or name equals current id (user hasn't manually changed it)
-      if (!currentName || currentName === currentId) {
+      const prevRegistry = findModelByIdOrAlias(currentId)
+      // Auto-fill if name is empty, equals current id, or equals previous registry name
+      const shouldAutoFill = !currentName || currentName === currentId || currentName === prevRegistry?.name
+      if (registry && shouldAutoFill) {
+        updated[index] = {
+          ...model,
+          id: value,
+          name: registry.name,
+          contextWindow: registry.contextWindow,
+          maxTokens: registry.maxOutputTokens ?? model.maxTokens,
+        }
+      } else if (shouldAutoFill) {
         updated[index] = { ...model, id: value, name: value || null }
       } else {
         updated[index] = { ...model, id: value }

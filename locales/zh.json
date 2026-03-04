@@ -79,6 +79,18 @@
   "preferences.advanced.option2": "示例选项 2",
   "preferences.advanced.option3": "示例选项 3",
 
+  "preferences.models": "模型注册表",
+  "preferences.models.title": "模型注册表",
+  "preferences.models.description": "内置的已知模型配置信息，包含模型 ID、名称、平台类型、上下文窗口等。",
+  "preferences.models.searchPlaceholder": "搜索模型 ID、名称、别名或平台...",
+  "preferences.models.colId": "模型 ID / 别名",
+  "preferences.models.colName": "名称",
+  "preferences.models.colPlatform": "平台类型",
+  "preferences.models.colContext": "上下文窗口",
+  "preferences.models.colMaxOutput": "最大输出",
+  "preferences.models.noResults": "未找到匹配的模型",
+  "preferences.models.totalCount": "共 {{count}} 个模型",
+
   "preferences.paths": "路径",
   "preferences.paths.title": "配置路径",
   "preferences.paths.description": "自定义 Droid、OpenCode、Codex 和 OpenClaw 的配置目录。留空将使用默认路径。",
