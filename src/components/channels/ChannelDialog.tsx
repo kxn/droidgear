@@ -65,6 +65,7 @@ function ChannelForm({ channel, onSave, onCancel }: ChannelFormProps) {
   } | null>(null)
 
   const isApiKeyAuth = isApiKeyAuthChannel(channelType)
+  const hasApiVersionSuffix = /\/(v1beta|v1)\/?$/.test(baseUrl.trim())
 
   // Load credentials from storage for existing channels
   useEffect(() => {
@@ -262,6 +263,11 @@ function ChannelForm({ channel, onSave, onCancel }: ChannelFormProps) {
                 )}
               </Button>
             </div>
+            {hasApiVersionSuffix && (
+              <p className="text-xs text-amber-600">
+                {t('channels.apiUrlVersionSuffixWarning')}
+              </p>
+            )}
             {detectMessage && (
               <p
                 className={`text-xs ${detectMessage.type === 'success' ? 'text-green-600' : 'text-destructive'}`}

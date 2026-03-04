@@ -413,6 +413,7 @@
   "channels.detectType": "自动检测类型",
   "channels.detectSuccess": "已检测为 {{type}}",
   "channels.detectFailed": "检测失败，请手动选择类型",
+  "channels.apiUrlVersionSuffixWarning": "API 地址不应以 /v1 或 /v1beta 结尾，请移除该后缀",
   "channels.selectChannelHint": "从侧边栏选择一个渠道或添加新渠道",
   "channels.selectChannel": "选择渠道",
   "channels.selectChannelPlaceholder": "选择一个渠道",
