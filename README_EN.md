@@ -92,7 +92,7 @@ DroidGear TUI is a terminal interface version designed for SSH and headless envi
 
 ### Installation
 
-Download the `droidgear-tui` binary for your platform from [Releases](https://github.com/sunshow/droid-switch/releases):
+Download the `droidgear-tui` binary for your platform from [Releases](https://github.com/Sunshow/droidgear/releases):
 
 - macOS (Apple Silicon): `droidgear-tui-*-aarch64-apple-darwin.tar.gz`
 - macOS (Intel): `droidgear-tui-*-x86_64-apple-darwin.tar.gz`
