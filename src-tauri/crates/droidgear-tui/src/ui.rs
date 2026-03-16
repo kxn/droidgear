@@ -3,7 +3,7 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState, Padding, Paragraph, Wrap},
+    widgets::{Block, Borders, Clear, List, ListItem, ListState, Padding, Paragraph, Wrap},
     Frame,
 };
 use std::sync::OnceLock;
@@ -2061,6 +2061,7 @@ fn draw_profile_list<'a>(
 fn draw_modal(frame: &mut Frame, modal: &app::Modal) {
     let t = theme();
     let area = centered_rect(70, 30, frame.area());
+    frame.render_widget(Clear, area);
     match modal {
         app::Modal::Confirm { message, .. } => {
             let text = vec![
