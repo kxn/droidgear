@@ -1,5 +1,6 @@
 export { OpenClawFeatureList } from './OpenClawFeatureList'
 export { OpenClawConfigPage } from './OpenClawConfigPage'
 export { OpenClawHelpersPage } from './OpenClawHelpersPage'
+export { SubagentsPage } from './SubagentsPage'
 export { ProviderCard } from './ProviderCard'
 export { ProviderDialog } from './ProviderDialog'

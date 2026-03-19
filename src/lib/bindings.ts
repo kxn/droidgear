@@ -953,6 +953,28 @@ async readOpenclawCurrentConfig() : Promise<Result<OpenClawCurrentConfig, string
 }
 },
 /**
+ * Read subagents from OpenClaw config file
+ */
+async readOpenclawSubagents() : Promise<Result<OpenClawSubAgent[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("read_openclaw_subagents") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Save subagents to OpenClaw config file
+ */
+async saveOpenclawSubagents(subagents: OpenClawSubAgent[]) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("save_openclaw_subagents", { subagents }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Lists all session projects from ~/.factory/sessions directory.
  */
 async listSessionProjects() : Promise<Result<SessionProject[], string>> {
@@ -1385,6 +1407,26 @@ export type OpenClawProfile = { id: string; name: string; description?: string |
  * OpenClaw Provider configuration
  */
 export type OpenClawProviderConfig = { baseUrl?: string | null; apiKey?: string | null; api?: string | null; models?: OpenClawModel[] }
+/**
+ * OpenClaw SubAgent definition
+ */
+export type OpenClawSubAgent = { id: string; name?: string | null; identity?: OpenClawSubAgentIdentity | null; model?: OpenClawSubAgentModel | null; tools?: OpenClawSubAgentTools | null; workspace?: string | null; subagents?: OpenClawSubAgentSubagentsConfig | null }
+/**
+ * OpenClaw SubAgent identity
+ */
+export type OpenClawSubAgentIdentity = { emoji?: string | null; name?: string | null }
+/**
+ * OpenClaw SubAgent model config
+ */
+export type OpenClawSubAgentModel = { primary?: string | null; fallbacks?: string[] | null }
+/**
+ * OpenClaw SubAgent subagents config (for main agent's allowAgents)
+ */
+export type OpenClawSubAgentSubagentsConfig = { allowAgents?: string[] | null; maxConcurrent?: number | null }
+/**
+ * OpenClaw SubAgent tools config
+ */
+export type OpenClawSubAgentTools = { profile?: string | null }
 /**
  * Configuration status
  */

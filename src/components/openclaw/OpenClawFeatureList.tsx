@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Server, LifeBuoy } from 'lucide-react'
+import { Server, LifeBuoy, Bot } from 'lucide-react'
 import { writeText } from '@tauri-apps/plugin-clipboard-manager'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -16,6 +16,7 @@ interface FeatureItem {
 
 const features: FeatureItem[] = [
   { id: 'providers', labelKey: 'openclaw.features.providers', icon: Server },
+  { id: 'subagents', labelKey: 'openclaw.features.subagents', icon: Bot },
   { id: 'helpers', labelKey: 'openclaw.features.helpers', icon: LifeBuoy },
 ]
 

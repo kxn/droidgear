@@ -5,7 +5,8 @@
 pub use droidgear_core::openclaw::{
     BlockStreamingChunk, BlockStreamingCoalesce, BlockStreamingConfig, OpenClawConfigStatus,
     OpenClawCurrentConfig, OpenClawModel, OpenClawProfile, OpenClawProviderConfig,
-    TelegramChannelConfig,
+    OpenClawSubAgent, OpenClawSubAgentIdentity, OpenClawSubAgentModel, OpenClawSubAgentSubagentsConfig,
+    OpenClawSubAgentTools, TelegramChannelConfig,
 };
 
 /// List all OpenClaw profiles
@@ -79,4 +80,18 @@ pub async fn get_openclaw_config_status() -> Result<OpenClawConfigStatus, String
 #[specta::specta]
 pub async fn read_openclaw_current_config() -> Result<OpenClawCurrentConfig, String> {
     droidgear_core::openclaw::read_openclaw_current_config()
+}
+
+/// Read subagents from OpenClaw config file
+#[tauri::command]
+#[specta::specta]
+pub async fn read_openclaw_subagents() -> Result<Vec<OpenClawSubAgent>, String> {
+    droidgear_core::openclaw::read_openclaw_subagents()
+}
+
+/// Save subagents to OpenClaw config file
+#[tauri::command]
+#[specta::specta]
+pub async fn save_openclaw_subagents(subagents: Vec<OpenClawSubAgent>) -> Result<(), String> {
+    droidgear_core::openclaw::save_openclaw_subagents(subagents)
 }

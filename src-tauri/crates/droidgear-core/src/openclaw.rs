@@ -129,6 +129,63 @@ pub struct OpenClawCurrentConfig {
     pub providers: HashMap<String, OpenClawProviderConfig>,
 }
 
+/// OpenClaw SubAgent identity
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct OpenClawSubAgentIdentity {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub emoji: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}
+
+/// OpenClaw SubAgent tools config
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct OpenClawSubAgentTools {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub profile: Option<String>,
+}
+
+/// OpenClaw SubAgent model config
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct OpenClawSubAgentModel {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub primary: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fallbacks: Option<Vec<String>>,
+}
+
+/// OpenClaw SubAgent subagents config (for main agent's allowAgents)
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct OpenClawSubAgentSubagentsConfig {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allow_agents: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_concurrent: Option<u32>,
+}
+
+/// OpenClaw SubAgent definition
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct OpenClawSubAgent {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub identity: Option<OpenClawSubAgentIdentity>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model: Option<OpenClawSubAgentModel>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tools: Option<OpenClawSubAgentTools>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub workspace: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub subagents: Option<OpenClawSubAgentSubagentsConfig>,
+}
+
 // ============================================================================
 // Path Helpers
 // ============================================================================
@@ -223,6 +280,7 @@ const REPLACE_PATHS: &[&[&str]] = &[
     &["agents", "defaults", "blockStreamingBreak"],
     &["agents", "defaults", "blockStreamingChunk"],
     &["agents", "defaults", "blockStreamingCoalesce"],
+    &["agents", "list"],
 ];
 
 /// Deep merge with path-based replacement strategy.
@@ -783,3 +841,121 @@ pub fn get_openclaw_config_status() -> Result<OpenClawConfigStatus, String> {
 pub fn read_openclaw_current_config() -> Result<OpenClawCurrentConfig, String> {
     read_openclaw_current_config_for_home(&system_home_dir()?)
 }
+
+// ============================================================================
+// SubAgents
+// ============================================================================
+
+pub fn read_openclaw_subagents_for_home(home_dir: &Path) -> Result<Vec<OpenClawSubAgent>, String> {
+    let config = read_openclaw_config_raw_for_home(home_dir)?;
+
+    let mut subagents = Vec::new();
+    if let Some(agents) = config.get("agents").and_then(|v| v.as_object()) {
+        if let Some(list) = agents.get("list").and_then(|v| v.as_array()) {
+            for item in list {
+                if let Ok(agent) = serde_json::from_value::<OpenClawSubAgent>(item.clone()) {
+                    subagents.push(agent);
+                }
+            }
+        }
+    }
+
+    Ok(subagents)
+}
+
+pub fn save_openclaw_subagents_for_home(
+    home_dir: &Path,
+    subagents: Vec<OpenClawSubAgent>,
+) -> Result<(), String> {
+    let config_path = openclaw_config_path_for_home(home_dir)?;
+    let mut config = read_openclaw_config_raw_for_home(home_dir)?;
+
+    // Read existing agents.list as raw Values, indexed by id
+    let mut existing_map: std::collections::HashMap<String, Value> =
+        std::collections::HashMap::new();
+    if let Some(agents) = config.get("agents").and_then(|v| v.as_object()) {
+        if let Some(list) = agents.get("list").and_then(|v| v.as_array()) {
+            for item in list {
+                if let Some(id) = item.get("id").and_then(|v| v.as_str()) {
+                    existing_map.insert(id.to_string(), item.clone());
+                }
+            }
+        }
+    }
+
+    // Collect all non-main subagent IDs for main's allowAgents
+    let non_main_ids: Vec<String> = subagents
+        .iter()
+        .filter(|a| a.id != "main")
+        .map(|a| a.id.clone())
+        .collect();
+
+    // Build merged list: for each subagent, merge new data into existing entry
+    let mut result_list: Vec<Value> = Vec::new();
+
+    for agent in &subagents {
+        let new_value = serde_json::to_value(agent)
+            .map_err(|e| format!("Failed to serialize subagent: {e}"))?;
+
+        let merged = if let Some(mut existing) = existing_map.remove(&agent.id) {
+            // Deep merge new into existing (new fields override, existing fields preserved)
+            deep_merge_with_replace(&mut existing, &new_value, &[]);
+            existing
+        } else {
+            new_value
+        };
+
+        result_list.push(merged);
+    }
+
+    // Ensure main entry exists with subagents.allowAgents
+    if !non_main_ids.is_empty() {
+        let has_main = subagents.iter().any(|a| a.id == "main");
+        if !has_main {
+            // Build main entry, merging with existing main if present
+            let allow_agents_value = Value::Array(
+                non_main_ids.iter().map(|s| Value::String(s.clone())).collect(),
+            );
+            let mut sa_obj = serde_json::Map::new();
+            sa_obj.insert("allowAgents".to_string(), allow_agents_value);
+
+            let mut main_overlay = serde_json::Map::new();
+            main_overlay.insert("id".to_string(), Value::String("main".to_string()));
+            main_overlay.insert("subagents".to_string(), Value::Object(sa_obj));
+
+            let main_entry = if let Some(mut existing_main) = existing_map.remove("main") {
+                deep_merge_with_replace(
+                    &mut existing_main,
+                    &Value::Object(main_overlay),
+                    &[],
+                );
+                existing_main
+            } else {
+                Value::Object(main_overlay)
+            };
+            // Insert main at the beginning
+            result_list.insert(0, main_entry);
+        }
+    }
+
+    // Build overlay with agents.list
+    let mut overlay = serde_json::Map::new();
+    let mut agents = serde_json::Map::new();
+    agents.insert("list".to_string(), Value::Array(result_list));
+    overlay.insert("agents".to_string(), Value::Object(agents));
+
+    deep_merge_with_replace(&mut config, &Value::Object(overlay), &[]);
+
+    let s = serde_json::to_string_pretty(&config)
+        .map_err(|e| format!("Failed to serialize config: {e}"))?;
+    storage::atomic_write(&config_path, s.as_bytes())
+}
+
+pub fn read_openclaw_subagents() -> Result<Vec<OpenClawSubAgent>, String> {
+    read_openclaw_subagents_for_home(&system_home_dir()?)
+}
+
+pub fn save_openclaw_subagents(subagents: Vec<OpenClawSubAgent>) -> Result<(), String> {
+    save_openclaw_subagents_for_home(&system_home_dir()?, subagents)
+}
+

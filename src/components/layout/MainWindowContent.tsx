@@ -12,7 +12,11 @@ import {
 } from '@/components/droid'
 import { OpenCodeConfigPage } from '@/components/opencode'
 import { CodexConfigPage } from '@/components/codex'
-import { OpenClawConfigPage, OpenClawHelpersPage } from '@/components/openclaw'
+import {
+  OpenClawConfigPage,
+  OpenClawHelpersPage,
+  SubagentsPage,
+} from '@/components/openclaw'
 import { ChannelDetail, ChannelDialog } from '@/components/channels'
 import { useUIStore } from '@/store/ui-store'
 import { useChannelStore } from '@/store/channel-store'
@@ -91,6 +95,7 @@ export function MainWindowContent({
       return (
         <>
           {openclawSubView === 'providers' && <OpenClawConfigPage />}
+          {openclawSubView === 'subagents' && <SubagentsPage />}
           {openclawSubView === 'helpers' && <OpenClawHelpersPage />}
         </>
       )

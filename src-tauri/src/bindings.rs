@@ -93,6 +93,8 @@ pub fn generate_bindings() -> Builder<tauri::Wry> {
         openclaw::apply_openclaw_profile,
         openclaw::get_openclaw_config_status,
         openclaw::read_openclaw_current_config,
+        openclaw::read_openclaw_subagents,
+        openclaw::save_openclaw_subagents,
         sessions::list_session_projects,
         sessions::list_sessions,
         sessions::get_session_detail,

@@ -128,6 +128,7 @@
   "common.create": "Create",
   "common.edit": "Edit",
   "common.delete": "Delete",
+  "common.deleted": "Deleted",
   "common.dismiss": "Dismiss",
   "common.refresh": "Refresh",
   "common.loading": "Loading...",
@@ -738,6 +739,7 @@
 
   "openclaw.features.title": "OpenClaw",
   "openclaw.features.providers": "Providers",
+  "openclaw.features.subagents": "Subagents",
   "openclaw.features.helpers": "Helpers",
   "openclaw.features.hint": "Manage OpenClaw configuration (providers and models).",
 
@@ -832,5 +834,30 @@
   "openclaw.helpers.telegram.blockStreaming": "Enable Block Streaming",
   "openclaw.helpers.telegram.chunkMode": "Chunk Mode",
   "openclaw.helpers.telegram.chunkMode.newline": "By newline",
-  "openclaw.helpers.telegram.chunkMode.chars": "By character count"
+  "openclaw.helpers.telegram.chunkMode.chars": "By character count",
+
+  "openclaw.subagents.title": "Subagents",
+  "openclaw.subagents.description": "Manage OpenClaw sub-agents and their model configurations",
+  "openclaw.subagents.add": "Add Subagent",
+  "openclaw.subagents.edit": "Edit Subagent",
+  "openclaw.subagents.delete": "Delete Subagent",
+  "openclaw.subagents.deleteConfirm": "Are you sure you want to delete this subagent?",
+  "openclaw.subagents.empty": "No subagents configured",
+  "openclaw.subagents.noModel": "No model configured",
+  "openclaw.subagents.dialogDescription": "Configure a sub-agent with model and identity settings",
+  "openclaw.subagents.id": "Agent ID",
+  "openclaw.subagents.idExists": "Agent ID already exists",
+  "openclaw.subagents.name": "Name",
+  "openclaw.subagents.namePlaceholder": "Display name",
+  "openclaw.subagents.emoji": "Emoji",
+  "openclaw.subagents.primaryModel": "Primary Model",
+  "openclaw.subagents.fallbacks": "Fallback Models",
+  "openclaw.subagents.fallbackPlaceholder": "Type model ref and press Enter",
+  "openclaw.subagents.toolsProfile": "Tools Profile",
+  "openclaw.subagents.toolsProfilePlaceholder": "Select tools profile",
+  "openclaw.subagents.workspace": "Workspace",
+  "openclaw.subagents.workspacePlaceholder": "Workspace directory path",
+  "openclaw.subagents.allowAgents": "Allow Agents",
+  "openclaw.subagents.allowAgentsPlaceholder": "Type agent ID and press Enter",
+  "openclaw.subagents.maxConcurrent": "Max Concurrent"
 }
