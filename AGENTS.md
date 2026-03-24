@@ -63,3 +63,12 @@ docs/
 
 - **Agent guidelines**: `docs/agents/README.md` — Coding guidelines for AI agents
 - **Developer docs**: `docs/developer/README.md` — Deep-dive technical documentation
+
+## Terminology
+
+| Term                               | Meaning                                                                                                                                                                                         |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Factory Droid** (简称 **Droid**) | Factory AI 的 coding plan 功能，配置文件位于 `~/.factory/settings.json`，对应代码中的 `factory_settings` 模块和 `CustomModel` 类型。[官方 BYOK 文档](https://docs.factory.ai/cli/byok/overview) |
+| **OpenClaw**                       | 独立的 AI 代理框架，配置文件位于 `~/.openclaw/openclaw.json`，对应代码中的 `openclaw` 模块                                                                                                      |
+| **OpenCode**                       | 另一个独立工具，对应 `opencode` 模块                                                                                                                                                            |
+| **Codex**                          | OpenAI Codex CLI 工具，对应 `codex` 模块                                                                                                                                                        |

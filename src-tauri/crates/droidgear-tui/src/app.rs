@@ -295,6 +295,8 @@ pub enum InputAction {
     FactoryDraftSetModel,
     FactoryDraftSetDisplayName,
     FactoryDraftSetMaxOutputTokens,
+    FactoryDraftSetExtraArgs,
+    FactoryDraftSetExtraHeaders,
     McpCreateServer,
     McpDraftSetName,
     McpDraftSetCommand,
@@ -640,7 +642,7 @@ impl App {
         if self.factory_models_index >= self.custom_models.len() {
             self.factory_models_index = self.custom_models.len().saturating_sub(1);
         }
-        let factory_model_fields_count = 7;
+        let factory_model_fields_count = 9;
         if self.factory_model_field_index >= factory_model_fields_count {
             self.factory_model_field_index = factory_model_fields_count.saturating_sub(1);
         }

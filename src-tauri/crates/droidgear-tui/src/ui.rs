@@ -542,6 +542,34 @@ fn draw_factory_model(frame: &mut Frame, app: &app::App, area: Rect) {
                 "no".to_string()
             },
         ),
+        (
+            "Extra Args",
+            draft
+                .extra_args
+                .as_ref()
+                .map(|m| {
+                    if m.is_empty() {
+                        "(none)".to_string()
+                    } else {
+                        format!("{} entries", m.len())
+                    }
+                })
+                .unwrap_or_else(|| "(none)".to_string()),
+        ),
+        (
+            "Extra Headers",
+            draft
+                .extra_headers
+                .as_ref()
+                .map(|m| {
+                    if m.is_empty() {
+                        "(none)".to_string()
+                    } else {
+                        format!("{} entries", m.len())
+                    }
+                })
+                .unwrap_or_else(|| "(none)".to_string()),
+        ),
     ];
 
     let mut items: Vec<ListItem> = Vec::new();

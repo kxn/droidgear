@@ -704,6 +704,34 @@ fn handle_factory_model_key(app: &mut app::App, code: KeyCode) -> Option<Action>
                     draft.supports_images = Some(!current);
                 }
             }
+            7 => {
+                let current = app
+                    .factory_draft
+                    .as_ref()
+                    .and_then(|d| d.extra_args.as_ref())
+                    .map(|m| serde_json::to_string_pretty(m).unwrap_or_default())
+                    .unwrap_or_default();
+                app.modal = Some(app::Modal::Input {
+                    title: "Extra Args (JSON object)".to_string(),
+                    value: current,
+                    is_secret: false,
+                    action: app::InputAction::FactoryDraftSetExtraArgs,
+                });
+            }
+            8 => {
+                let current = app
+                    .factory_draft
+                    .as_ref()
+                    .and_then(|d| d.extra_headers.as_ref())
+                    .map(|m| serde_json::to_string_pretty(m).unwrap_or_default())
+                    .unwrap_or_default();
+                app.modal = Some(app::Modal::Input {
+                    title: "Extra Headers (JSON object)".to_string(),
+                    value: current,
+                    is_secret: false,
+                    action: app::InputAction::FactoryDraftSetExtraHeaders,
+                });
+            }
             _ => {}
         },
         _ => {}
@@ -5425,6 +5453,32 @@ fn run_input_action(
             };
             if let Some(draft) = app.factory_draft.as_mut() {
                 draft.max_output_tokens = tokens;
+            }
+            Ok(())
+        }
+        app::InputAction::FactoryDraftSetExtraArgs => {
+            if let Some(draft) = app.factory_draft.as_mut() {
+                if trimmed.is_empty() {
+                    draft.extra_args = None;
+                } else {
+                    let parsed: std::collections::HashMap<String, serde_json::Value> =
+                        serde_json::from_str(trimmed)
+                            .map_err(|e| anyhow::Error::msg(format!("Invalid JSON: {e}")))?;
+                    draft.extra_args = Some(parsed);
+                }
+            }
+            Ok(())
+        }
+        app::InputAction::FactoryDraftSetExtraHeaders => {
+            if let Some(draft) = app.factory_draft.as_mut() {
+                if trimmed.is_empty() {
+                    draft.extra_headers = None;
+                } else {
+                    let parsed: std::collections::HashMap<String, String> =
+                        serde_json::from_str(trimmed)
+                            .map_err(|e| anyhow::Error::msg(format!("Invalid JSON: {e}")))?;
+                    draft.extra_headers = Some(parsed);
+                }
             }
             Ok(())
         }

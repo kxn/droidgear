@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Loader2, FolderInput } from 'lucide-react'
+import { Loader2, FolderInput, ChevronDown, ChevronRight } from 'lucide-react'
+import { Textarea } from '@/components/ui/textarea'
 import {
   ResizableDialog,
   ResizableDialogContent,
@@ -26,6 +27,7 @@ import {
   type CustomModel,
   type Provider,
   type ModelInfo,
+  type JsonValue,
 } from '@/lib/bindings'
 import {
   containsRegexSpecialChars,
@@ -88,6 +90,15 @@ function ModelForm({
   )
   const [supportsImages, setSupportsImages] = useState(
     model?.supportsImages ?? false
+  )
+  const [extraArgs, setExtraArgs] = useState(
+    model?.extraArgs ? JSON.stringify(model.extraArgs, null, 2) : ''
+  )
+  const [extraHeaders, setExtraHeaders] = useState(
+    model?.extraHeaders ? JSON.stringify(model.extraHeaders, null, 2) : ''
+  )
+  const [showAdvanced, setShowAdvanced] = useState(
+    !!(model?.extraArgs || model?.extraHeaders)
   )
 
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([])
@@ -194,8 +205,45 @@ function ModelForm({
     setSelectedModels(new Map())
   }
 
+  const parseJsonSafe = (
+    value: string
+  ): Partial<Record<string, JsonValue>> | undefined => {
+    const trimmed = value.trim()
+    if (!trimmed) return undefined
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (
+        typeof parsed === 'object' &&
+        parsed !== null &&
+        !Array.isArray(parsed)
+      ) {
+        return parsed as Partial<Record<string, JsonValue>>
+      }
+      return undefined
+    } catch {
+      return undefined
+    }
+  }
+
+  const isJsonValid = (value: string): boolean => {
+    const trimmed = value.trim()
+    if (!trimmed) return true
+    try {
+      const parsed = JSON.parse(trimmed)
+      return (
+        typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)
+      )
+    } catch {
+      return false
+    }
+  }
+
+  const extraArgsValid = isJsonValid(extraArgs)
+  const extraHeadersValid = isJsonValid(extraHeaders)
+
   const handleSave = () => {
     if (!modelId || !baseUrl || !apiKey) return
+    if (!extraArgsValid || !extraHeadersValid) return
 
     const newModel: CustomModel = {
       model: modelId,
@@ -205,6 +253,11 @@ function ModelForm({
       displayName: displayName || undefined,
       maxOutputTokens: maxTokens ? parseInt(maxTokens) : undefined,
       supportsImages: supportsImages || undefined,
+      extraArgs: parseJsonSafe(extraArgs),
+      extraHeaders: parseJsonSafe(extraHeaders) as
+        | Record<string, string>
+        | null
+        | undefined,
     }
 
     onSave(newModel)
@@ -239,6 +292,8 @@ function ModelForm({
     modelId &&
     baseUrl &&
     apiKey &&
+    extraArgsValid &&
+    extraHeadersValid &&
     (!displayName ||
       (!containsRegexSpecialChars(displayName) &&
         !hasOfficialModelNamePrefix(displayName)))
@@ -409,6 +464,65 @@ function ModelForm({
                   {t('models.supportsImages')}
                 </Label>
               </div>
+
+              {/* Advanced Options (extraArgs / extraHeaders) */}
+              <button
+                type="button"
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+              >
+                {showAdvanced ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+                {t('models.advancedOptions')}
+              </button>
+
+              {showAdvanced && (
+                <div className="grid gap-3 pl-2 border-l-2 border-muted">
+                  <div className="grid gap-2">
+                    <Label htmlFor="extraArgs">{t('models.extraArgs')}</Label>
+                    <Textarea
+                      id="extraArgs"
+                      value={extraArgs}
+                      onChange={e => setExtraArgs(e.target.value)}
+                      placeholder={t('models.extraArgsPlaceholder')}
+                      rows={3}
+                      className="font-mono text-sm"
+                    />
+                    {!extraArgsValid && (
+                      <p className="text-sm text-destructive">
+                        {t('models.invalidJson')}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      {t('models.extraArgsHint')}
+                    </p>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="extraHeaders">
+                      {t('models.extraHeaders')}
+                    </Label>
+                    <Textarea
+                      id="extraHeaders"
+                      value={extraHeaders}
+                      onChange={e => setExtraHeaders(e.target.value)}
+                      placeholder={t('models.extraHeadersPlaceholder')}
+                      rows={3}
+                      className="font-mono text-sm"
+                    />
+                    {!extraHeadersValid && (
+                      <p className="text-sm text-destructive">
+                        {t('models.invalidJson')}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      {t('models.extraHeadersHint')}
+                    </p>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>

@@ -94,6 +94,20 @@ export function ModelCard({
         <div className="text-sm text-muted-foreground truncate">
           {model.model} • {model.baseUrl}
         </div>
+        {(model.extraArgs || model.extraHeaders) && (
+          <div className="flex items-center gap-1 mt-0.5">
+            {model.extraArgs && (
+              <Badge variant="outline" className="text-xs px-1.5 py-0">
+                extraArgs
+              </Badge>
+            )}
+            {model.extraHeaders && (
+              <Badge variant="outline" className="text-xs px-1.5 py-0">
+                extraHeaders
+              </Badge>
+            )}
+          </div>
+        )}
         {isDefault && (
           <div className="text-xs text-muted-foreground mt-1">
             {t('models.defaultHint')}
