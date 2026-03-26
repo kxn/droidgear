@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.5.3
+
+**New Features / 新功能**
+
+- Implement Missions feature with dedicated UI and configurable model settings / 实现 Missions 功能，包含专属 UI 和可配置的模型设置
+- Add reasoning effort configuration for models in both GUI and TUI / 在 GUI 和 TUI 中添加模型推理力度配置
+
 ## v0.5.2
 
 **New Features / 新功能**

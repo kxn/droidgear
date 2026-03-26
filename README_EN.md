@@ -49,6 +49,11 @@ Run the installer directly.
 - **Follow Mode** - Session follow mode with thinking expansion toggle
 - **Cloud Sync** - Cloud session sync toggle
 
+### Missions Management
+
+- **Model Configuration** - Configure Worker model and Validation Worker model for Missions
+- **Reasoning Effort** - Set reasoning effort independently for each model (none/low/medium/high)
+
 ### Specs File Management
 
 - **File Browser** - View spec files in `~/.factory/specs` directory

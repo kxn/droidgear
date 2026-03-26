@@ -20,7 +20,10 @@ describe('ModelDialog', () => {
     await user.type(baseUrlInput, 'https://api.example.com/custom')
 
     // Open provider select and switch provider
-    await user.click(screen.getByRole('combobox'))
+    const providerComboboxes = screen.getAllByRole('combobox')
+    const providerSelect = providerComboboxes[0]
+    if (!providerSelect) throw new Error('Provider combobox not found')
+    await user.click(providerSelect)
     const openaiOptions = screen.getAllByText(/OpenAI/i)
     const lastOption = openaiOptions[openaiOptions.length - 1]
     if (lastOption) {

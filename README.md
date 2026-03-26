@@ -49,6 +49,11 @@ xattr -cr /Applications/DroidGear.app
 - **跟随模式** - 会话跟随模式，支持切换思考展开状态
 - **云端同步** - 云端会话同步开关
 
+### Missions 管理
+
+- **模型配置** - 配置 Missions 的 Worker 模型和 Validation Worker 模型
+- **推理力度** - 为每个模型独立设置推理力度（none/low/medium/high）
+
 ### Specs 规格文件管理
 
 - **文件浏览** - 查看 `~/.factory/specs` 目录下的规格文件
