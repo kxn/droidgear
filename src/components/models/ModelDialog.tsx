@@ -91,6 +91,27 @@ function ModelForm({
   const [supportsImages, setSupportsImages] = useState(
     model?.supportsImages ?? false
   )
+  // Extract reasoning effort from extraArgs if present
+  const extractReasoningEffort = (
+    args?: Partial<Record<string, JsonValue>> | null
+  ): string => {
+    if (!args) return 'none'
+    const reasoning = args.reasoning
+    if (
+      reasoning &&
+      typeof reasoning === 'object' &&
+      !Array.isArray(reasoning) &&
+      reasoning !== null
+    ) {
+      const effort = (reasoning as Record<string, JsonValue>).effort
+      if (typeof effort === 'string') return effort
+    }
+    return 'none'
+  }
+
+  const [reasoningEffort, setReasoningEffort] = useState(
+    extractReasoningEffort(model?.extraArgs)
+  )
   const [extraArgs, setExtraArgs] = useState(
     model?.extraArgs ? JSON.stringify(model.extraArgs, null, 2) : ''
   )
@@ -253,7 +274,15 @@ function ModelForm({
       displayName: displayName || undefined,
       maxOutputTokens: maxTokens ? parseInt(maxTokens) : undefined,
       supportsImages: supportsImages || undefined,
-      extraArgs: parseJsonSafe(extraArgs),
+      extraArgs: (() => {
+        const parsed = parseJsonSafe(extraArgs) ?? {}
+        if (reasoningEffort && reasoningEffort !== 'none') {
+          parsed.reasoning = { effort: reasoningEffort }
+        } else {
+          delete parsed.reasoning
+        }
+        return Object.keys(parsed).length > 0 ? parsed : undefined
+      })(),
       extraHeaders: parseJsonSafe(extraHeaders) as
         | Record<string, string>
         | null
@@ -463,6 +492,41 @@ function ModelForm({
                 <Label htmlFor="supportsImages">
                   {t('models.supportsImages')}
                 </Label>
+              </div>
+
+              {/* Reasoning Effort */}
+              <div className="grid gap-2">
+                <Label htmlFor="reasoningEffort">
+                  {t('models.reasoningEffort')}
+                </Label>
+                <Select
+                  value={reasoningEffort}
+                  onValueChange={setReasoningEffort}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">
+                      {t('models.reasoningEffort.none')}
+                    </SelectItem>
+                    <SelectItem value="low">
+                      {t('models.reasoningEffort.low')}
+                    </SelectItem>
+                    <SelectItem value="medium">
+                      {t('models.reasoningEffort.medium')}
+                    </SelectItem>
+                    <SelectItem value="high">
+                      {t('models.reasoningEffort.high')}
+                    </SelectItem>
+                    <SelectItem value="xhigh">
+                      {t('models.reasoningEffort.xhigh')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {t('models.reasoningEffortHint')}
+                </p>
               </div>
 
               {/* Advanced Options (extraArgs / extraHeaders) */}

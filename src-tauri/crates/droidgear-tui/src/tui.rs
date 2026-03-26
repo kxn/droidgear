@@ -709,6 +709,32 @@ fn handle_factory_model_key(app: &mut app::App, code: KeyCode) -> Option<Action>
                     .factory_draft
                     .as_ref()
                     .and_then(|d| d.extra_args.as_ref())
+                    .and_then(|m| m.get("reasoning"))
+                    .and_then(|v| v.as_object())
+                    .and_then(|obj| obj.get("effort"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("none")
+                    .to_string();
+                let options = vec![
+                    "none".to_string(),
+                    "low".to_string(),
+                    "medium".to_string(),
+                    "high".to_string(),
+                    "xhigh".to_string(),
+                ];
+                let index = options.iter().position(|o| o == &current).unwrap_or(0);
+                app.modal = Some(app::Modal::Select {
+                    title: "Reasoning Effort".to_string(),
+                    options,
+                    index,
+                    action: app::SelectAction::FactoryDraftSetReasoningEffort,
+                });
+            }
+            8 => {
+                let current = app
+                    .factory_draft
+                    .as_ref()
+                    .and_then(|d| d.extra_args.as_ref())
                     .map(|m| serde_json::to_string_pretty(m).unwrap_or_default())
                     .unwrap_or_default();
                 app.modal = Some(app::Modal::Input {
@@ -718,7 +744,7 @@ fn handle_factory_model_key(app: &mut app::App, code: KeyCode) -> Option<Action>
                     action: app::InputAction::FactoryDraftSetExtraArgs,
                 });
             }
-            8 => {
+            9 => {
                 let current = app
                     .factory_draft
                     .as_ref()
@@ -4064,6 +4090,33 @@ fn run_select_action(
             draft.provider = provider;
             if draft.base_url.trim().is_empty() {
                 draft.base_url = default_base_url.to_string();
+            }
+            Ok(())
+        }
+        app::SelectAction::FactoryDraftSetReasoningEffort => {
+            let Some(selected) = selected else {
+                return Ok(());
+            };
+            let Some(draft) = app.factory_draft.as_mut() else {
+                return Ok(());
+            };
+
+            if selected == "none" {
+                // Remove reasoning from extra_args
+                if let Some(args) = draft.extra_args.as_mut() {
+                    args.remove("reasoning");
+                    if args.is_empty() {
+                        draft.extra_args = None;
+                    }
+                }
+            } else {
+                let args = draft
+                    .extra_args
+                    .get_or_insert_with(std::collections::HashMap::new);
+                args.insert(
+                    "reasoning".to_string(),
+                    serde_json::json!({ "effort": selected }),
+                );
             }
             Ok(())
         }

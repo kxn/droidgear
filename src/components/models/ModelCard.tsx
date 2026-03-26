@@ -94,20 +94,49 @@ export function ModelCard({
         <div className="text-sm text-muted-foreground truncate">
           {model.model} • {model.baseUrl}
         </div>
-        {(model.extraArgs || model.extraHeaders) && (
-          <div className="flex items-center gap-1 mt-0.5">
-            {model.extraArgs && (
-              <Badge variant="outline" className="text-xs px-1.5 py-0">
-                extraArgs
-              </Badge>
-            )}
-            {model.extraHeaders && (
-              <Badge variant="outline" className="text-xs px-1.5 py-0">
-                extraHeaders
-              </Badge>
-            )}
-          </div>
-        )}
+        {(() => {
+          const reasoningEffortRaw =
+            model.extraArgs?.reasoning &&
+            typeof model.extraArgs.reasoning === 'object' &&
+            !Array.isArray(model.extraArgs.reasoning) &&
+            model.extraArgs.reasoning !== null
+              ? (model.extraArgs.reasoning as Record<string, unknown>).effort
+              : undefined
+          const reasoningEffort =
+            typeof reasoningEffortRaw === 'string'
+              ? reasoningEffortRaw
+              : undefined
+          const hasOtherExtraArgs =
+            model.extraArgs &&
+            Object.keys(model.extraArgs).some(k => k !== 'reasoning')
+          const hasExtraHeaders = !!model.extraHeaders
+
+          if (!reasoningEffort && !hasOtherExtraArgs && !hasExtraHeaders)
+            return null
+
+          return (
+            <div className="flex items-center gap-1 mt-0.5">
+              {reasoningEffort && (
+                <Badge
+                  variant="outline"
+                  className="text-xs px-1.5 py-0 border-purple-400/50 bg-purple-500/10 text-purple-600 dark:text-purple-400"
+                >
+                  ✨ {String(reasoningEffort)}
+                </Badge>
+              )}
+              {hasOtherExtraArgs && (
+                <Badge variant="outline" className="text-xs px-1.5 py-0">
+                  extraArgs
+                </Badge>
+              )}
+              {hasExtraHeaders && (
+                <Badge variant="outline" className="text-xs px-1.5 py-0">
+                  extraHeaders
+                </Badge>
+              )}
+            </div>
+          )
+        })()}
         {isDefault && (
           <div className="text-xs text-muted-foreground mt-1">
             {t('models.defaultHint')}

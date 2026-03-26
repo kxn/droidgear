@@ -543,6 +543,18 @@ fn draw_factory_model(frame: &mut Frame, app: &app::App, area: Rect) {
             },
         ),
         (
+            "Reasoning Effort",
+            draft
+                .extra_args
+                .as_ref()
+                .and_then(|m| m.get("reasoning"))
+                .and_then(|v| v.as_object())
+                .and_then(|obj| obj.get("effort"))
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| "(none)".to_string()),
+        ),
+        (
             "Extra Args",
             draft
                 .extra_args
