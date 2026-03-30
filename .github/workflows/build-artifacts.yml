@@ -1,0 +1,173 @@
+name: Build Artifacts
+
+on:
+  push:
+    branches:
+      - "codex/**"
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  rust-tests:
+    name: Rust Tests (core + tui)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - name: Run tests
+        shell: bash
+        run: |
+          cd src-tauri
+          cargo test -p droidgear-core -p droidgear-tui
+
+  build-tui:
+    name: Build droidgear-tui (${{ matrix.target }})
+    needs: rust-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: macos-latest
+            target: x86_64-apple-darwin
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - name: Build
+        shell: bash
+        run: |
+          cd src-tauri
+          cargo build -p droidgear-tui --release --locked --target "${{ matrix.target }}"
+
+      - name: Package (tar.gz)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          BIN="src-tauri/target/${{ matrix.target }}/release/droidgear-tui"
+          if [ ! -f "$BIN" ]; then
+            echo "Missing binary: $BIN" >&2
+            exit 1
+          fi
+          ASSET="droidgear-tui-${{ github.sha }}-${{ matrix.target }}.tar.gz"
+          tar -C "$(dirname "$BIN")" -czf "$ASSET" "$(basename "$BIN")"
+          echo "TUI_ASSET=$ASSET" >> "$GITHUB_ENV"
+
+      - name: Package (zip)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $bin = "src-tauri/target/${{ matrix.target }}/release/droidgear-tui.exe"
+          if (-not (Test-Path $bin)) {
+            Write-Error "Missing binary: $bin"
+            exit 1
+          }
+
+          $asset = "droidgear-tui-${{ github.sha }}-${{ matrix.target }}.zip"
+          $dir = Split-Path $bin
+          Push-Location $dir
+          Compress-Archive -Path "droidgear-tui.exe" -DestinationPath "$env:GITHUB_WORKSPACE\\$asset" -Force
+          Pop-Location
+          echo "TUI_ASSET=$asset" >> $env:GITHUB_ENV
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: droidgear-tui-${{ matrix.target }}
+          path: ${{ env.TUI_ASSET }}
+          if-no-files-found: error
+
+  build-desktop:
+    name: Build DroidGear Desktop (${{ matrix.label }})
+    needs: rust-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            label: linux-appimage
+            tauri_args: "--bundles appimage"
+            bundle_glob: "src-tauri/target/release/bundle/appimage/*.AppImage"
+          - os: windows-latest
+            label: windows-msi
+            tauri_args: "--bundles msi --config src-tauri/tauri.windows.conf.json"
+            bundle_glob: "src-tauri/target/release/bundle/msi/*.msi"
+          - os: macos-latest
+            label: macos-aarch64-dmg
+            tauri_args: "--bundles dmg --target aarch64-apple-darwin"
+            bundle_glob: "src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg"
+          - os: macos-latest
+            label: macos-x86_64-dmg
+            tauri_args: "--bundles dmg --target x86_64-apple-darwin"
+            bundle_glob: "src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg"
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "lts/*"
+          cache: "npm"
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: |
+            aarch64-apple-darwin
+            x86_64-apple-darwin
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build desktop
+        shell: bash
+        run: |
+          npm run tauri build -- ${{ matrix.tauri_args }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: droidgear-desktop-${{ matrix.label }}
+          path: ${{ matrix.bundle_glob }}
+          if-no-files-found: error
